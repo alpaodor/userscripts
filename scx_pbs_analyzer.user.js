@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PBS Analyzer 5
 // @namespace    reserve-analyzer
-// @version      5.5.1
+// @version      5.5.2
 // @description  Used to analyse a NavBlue Blue PBS Run for Sun Country Airlines. On report pages it reads the Stats/Dynamic Stats/Unstacking report on screen; on the PBS run list it downloads all three for the selected run, and colors the run list (Run Highlighter). It persists KPI data and compares output to the CBA. Co-authored by Ryan Odorizzi, OpenAI, and ClaudeAI.
 // @match        https://scx.pbs.vmc.navblue.cloud/class/report.html
 // @match        https://scx-uat.pbs.vmc.navblue.cloud/class/report.html
@@ -93,7 +93,7 @@
 
     // ---------------- Version & Change Log ----------------
     // Keep SCRIPT_VERSION in sync with the @version metadata above.
-    const SCRIPT_VERSION = "5.5.1";
+    const SCRIPT_VERSION = "5.5.2";
 
     // Change log: the five most recent releases, newest first. When adding a release, drop the
     // oldest so five remain — across major versions too (it is not cleared on a major bump).
@@ -101,6 +101,12 @@
     const CHANGELOG = {
         major: 5,
         releases: [
+            {
+                version: "5.5.2",
+                notes: [
+                    "The Open Time section now shows the run's Open Time Credit in hours (for example 412:30), just above the 2% limit. It comes from the Stats report; until Stats has run it reads Check Stats.",
+                ],
+            },
             {
                 version: "5.5.1",
                 notes: [
@@ -130,12 +136,6 @@
                     "Unstack Pairing % now reads 0.00% when the Unstacking report prints (None), instead of falling back to the yellow Dynamic Stats estimate.",
                     "When unstacking is turned off for a run, the Unstacking report has no SLG figures, so both SLG rows (and Validate's 10% SLG check) now use Dynamic Stats instead of staying yellow. 0 lines with SLG is green; SLG Pairing % is checked against its limit; a count above 0 stays yellow, since Dynamic can't tell how many lines are above 10%.",
                     "Run Highlighter: the OT % and reserve days are back on every run row, at the right of the run name, on a white tag so a long name can't push them out of sight. The selected run's figures still show at the left end of the toolbar too.",
-                ],
-            },
-            {
-                version: "5.3.2",
-                notes: [
-                    "When another PBS screen covers the run list (the launcher, for example), the analysis is still within reach: an Analyzer tab on the right edge of the window, showing the run's name, opens the panel over that screen, and ✕ closes it. The toolbar still hides off the run list, and back on the list the panel is as you left it.",
                 ],
             },
         ],
@@ -2297,6 +2297,7 @@ return `
 
         const ot = report?.stats?.openTimePercent;
         const formattedOT = ot == null ? "—" : `${ot}%`;
+        const otCredit = report?.stats?.openTimeCredit; // minutes, from the Stats report only
 
         return `
     <div class="ra-section-header">
@@ -2306,6 +2307,7 @@ return `
     </div>
 
     <div class="ra-section">
+      <div><strong>Credit:</strong> ${typeof otCredit === "number" ? minutesToHHMM(otCredit) : "Check Stats"}</div>
       <div><strong>Limit:</strong> ${LOA.OPEN_TIME_LIMIT}%</div>
     </div>
   `;
